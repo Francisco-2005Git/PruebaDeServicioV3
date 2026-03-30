@@ -45,6 +45,8 @@ RUN mkdir -p /var/log/php \
     && chown -R webuser:www-data /var/log/php \
     && chmod 755 /var/log/php
 
+COPY proyecto_solicitudes-main/ /var/www/html/
+
 # Set proper permissions for web directory
 RUN chown -R webuser:www-data /var/www/html \
     && chmod -R 750 /var/www/html
