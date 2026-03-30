@@ -32,27 +32,27 @@ RUN echo "memory_limit = ${PHP_MEMORY_LIMIT}" >> /usr/local/etc/php/conf.d/docke
     && echo "upload_max_filesize = ${PHP_UPLOAD_MAX_FILESIZE}" >> /usr/local/etc/php/conf.d/docker-php-upload-max-filesize.ini \
     && echo "post_max_size = ${PHP_POST_MAX_SIZE}" >> /usr/local/etc/php/conf.d/docker-php-post-max-size.ini
 
-# Configure Apache
+# Fix Apache MPM error
+RUN a2dismod mpm_event mpm_worker && a2enmod mpm_prefork
+
+# Enable Apache modules
 RUN a2enmod rewrite headers ssl
+
+# Improve Apache security settings
 RUN sed -i 's/ServerTokens OS/ServerTokens Prod/' /etc/apache2/conf-available/security.conf \
     && sed -i 's/ServerSignature On/ServerSignature Off/' /etc/apache2/conf-available/security.conf
 
-# Create a non-root user
-RUN useradd -r -u 1000 -g www-data webuser
-
-# Create PHP log directory and set permissions
+# Create PHP log directory
 RUN mkdir -p /var/log/php \
-    && chown -R webuser:www-data /var/log/php \
+    && chown -R www-data:www-data /var/log/php \
     && chmod 755 /var/log/php
 
+# Copy project files to Apache web directory
 COPY proyecto_solicitudes-main/ /var/www/html/
 
-# Set proper permissions for web directory
-RUN chown -R webuser:www-data /var/www/html \
-    && chmod -R 750 /var/www/html
-
-# Switch to non-root user
-USER webuser
+# Set permissions
+RUN chown -R www-data:www-data /var/www/html \
+    && chmod -R 755 /var/www/html
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --retries=3 \
